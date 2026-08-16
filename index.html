@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>万兴财富三方充值服务平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Microsoft YaHei", "PingFang SC", sans-serif; }
+        body { background: #FFFFFF; color: #1A1A1A; padding-bottom: 80px; }
+
+        /* 顶部 */
+        .header {
+            background: linear-gradient(135deg, #E53935, #C62828);
+            color: white;
+            padding: 20px 15px;
+            position: relative;
+        }
+        .header h1 { font-size: 24px; font-weight: bold; }
+        .header p { opacity: 0.9; margin-top: 5px; font-size: 15px; }
+        .hot-tag {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #00C853;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* 区域标题 */
+        .section-title {
+            font-size: 20px;
+            color: #E53935;
+            font-weight: bold;
+            padding: 20px 15px 10px;
+            border-left: 4px solid #E53935;
+            margin-left: 15px;
+        }
+
+        /* 服务类型网格 */
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 15px;
+        }
+        .service-card {
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 20px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #FFFFFF;
+        }
+        .service-card.active {
+            border-color: #E53935;
+            background: #FFF3F3;
+        }
+        .service-icon { font-size: 32px; margin-bottom: 8px; }
+        .service-name { font-size: 18px; font-weight: bold; margin-bottom: 4px; }
+        .service-desc { font-size: 13px; color: #757575; }
+
+        /* 选项网格 */
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 0 15px 15px;
+        }
+        .option-card {
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            padding: 15px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-card.active {
+            border-color: #E53935;
+            background: #FFF3F3;
+        }
+        .option-icon { font-size: 24px; margin-bottom: 6px; }
+        .option-name { font-size: 15px; font-weight: bold; }
+
+        /* 金额网格 */
+        .amount-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding: 0 15px 15px;
+        }
+        .amount-card {
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            padding: 15px 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .amount-card.active {
+            border-color: #E53935;
+            background: #FFF3F3;
+        }
+        .amount-cny { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+        .amount-usdt { font-size: 14px; color: #E53935; font-weight: bold; }
+
+        /* 输入框 */
+        .input-wrap { padding: 0 15px 15px; }
+        .input-field {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        /* 提交按钮 */
+        .submit-btn {
+            width: calc(100% - 30px);
+            margin: 0 15px 20px;
+            padding: 16px;
+            background: linear-gradient(135deg, #E53935, #C62828);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* 实时动态 */
+        .dynamic-box {
+            margin: 0 15px;
+            background: #F5F5F5;
+            border-radius: 10px;
+            padding: 15px;
+        }
+        .dynamic-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #E53935;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dynamic-dot {
+            width: 10px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 50%;
+        }
+        .dynamic-item {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 16px;
+            padding: 25px 20px;
+            border: 2px solid #E53935;
+        }
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            background: #E53935;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            margin: 0 auto 15px;
+        }
+        .modal-title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #E53935;
+            margin-bottom: 25px;
+        }
+        .modal-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #EEE;
+            font-size: 16px;
+        }
+        .modal-row.total {
+            border-bottom: none;
+            font-size: 20px;
+            font-weight: bold;
+            padding-top: 15px;
+        }
+        .modal-row.total .value { color: #E53935; }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .modal-btn.cancel {
+            background: #E0E0E0;
+            color: #666;
+        }
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #E53935, #C62828);
+            color: white;
+        }
+
+        /* 支付页面 */
+        .pay-header {
+            background: linear-gradient(135deg, #2196F3, #1565C0);
+            color: white;
+            padding: 25px 15px;
+        }
+        .pay-header h2 { font-size: 22px; }
+        .order-no {
+            background: rgba(255,255,255,0.2);
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .pay-preview {
+            margin: 20px 15px;
+            border: 1px solid #E3F2FD;
+            border-radius: 12px;
+            padding: 30px 15px;
+            text-align: center;
+            background: #F5FAFF;
+        }
+        .pay-preview-text {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1565C0;
+            line-height: 1.5;
+        }
+        .pay-info-box {
+            margin: 0 15px 20px;
+            border: 1px solid #E0E0E0;
+            border-radius: 12px;
+            padding: 20px 15px;
+        }
+        .pay-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #EEE;
+            font-size: 16px;
+        }
+        .pay-info-row:last-child { border-bottom: none; }
+        .pay-info-row .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #E53935;
+        }
+        .pay-section-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 25px 15px 15px;
+        }
+        .pay-address-box {
+            margin: 0 15px 20px;
+            background: #FFF8E1;
+            border: 1px solid #FFC107;
+            border-radius: 12px;
+            padding: 20px 15px;
+        }
+        .pay-address-label {
+            font-size: 15px;
+            color: #F57C00;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .pay-address-text {
+            background: #FFFFFF;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            color: #E65100;
+            margin-bottom: 15px;
+            border: 1px solid #FFD54F;
+        }
+        .copy-btn {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+        .pay-tip {
+            margin: 0 15px 20px;
+            background: #E8F5E9;
+            border-radius: 10px;
+            padding: 15px;
+            color: #2E7D32;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .pay-btn {
+            width: calc(100% - 30px);
+            margin: 0 15px 12px;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .pay-btn.confirm {
+            background: #2196F3;
+            color: white;
+        }
+        .pay-btn.back {
+            background: #E0E0E0;
+            color: #333;
+        }
+
+        /* 联系客服页 */
+        .contact-page { padding: 20px 15px; }
+        .contact-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px 20px;
+            border: 1px solid #E0E0E0;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .contact-icon { font-size: 48px; margin-bottom: 15px; }
+        .contact-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+        .contact-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #0088CC, #0099DD);
+            color: white !important;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .contact-desc {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.8;
+            margin-top: 15px;
+        }
+        .notice-card {
+            background: #F5F5F5;
+            border-radius: 10px;
+            padding: 20px 15px;
+        }
+        .notice-title { font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #E53935; }
+        .notice-text {
+            font-size: 14px;
+            color: #666;
+            line-height: 2;
+        }
+
+        /* 底部导航 */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            border-top: 1px solid #E0E0E0;
+            z-index: 99;
+        }
+        .nav-item {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            color: #666;
+            cursor: pointer;
+        }
+        .nav-item.active { color: #E53935; }
+        .nav-icon { font-size: 22px; margin-bottom: 4px; }
+        .nav-text { font-size: 12px; }
+
+        .page { display: none; }
+        .page.active { display: block; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<!-- 充值首页 -->
+<div id="page-recharge" class="page active">
+    <div class="header">
+        <h1>万兴财富三方充值服务平台</h1>
+        <p>7折慢充服务 · 30-90分钟内到账</p>
+        <div class="hot-tag">🔥 热门充值服务</div>
+    </div>
+
+    <!-- 选择服务类型 -->
+    <div class="section-title">选择服务类型</div>
+    <div class="service-grid">
+        <div class="service-card active" data-service="phone" onclick="selectService('phone')">
+            <div class="service-icon">📱</div>
+            <div class="service-name">话费充值</div>
+            <div class="service-desc">三大运营商</div>
+        </div>
+        <div class="service-card" data-service="oil" onclick="selectService('oil')">
+            <div class="service-icon">⛽</div>
+            <div class="service-name">加油卡充值</div>
+            <div class="service-desc">中石化/中石油</div>
+        </div>
+        <div class="service-card" data-service="douyin" onclick="selectService('douyin')">
+            <div class="service-icon">🎵</div>
+            <div class="service-name">抖音充值</div>
+            <div class="service-desc">抖币充值</div>
+        </div>
+        <div class="service-card" data-service="kuaishou" onclick="selectService('kuaishou')">
+            <div class="service-icon">⚡</div>
+            <div class="service-name">快手充值</div>
+            <div class="service-desc">快币充值</div>
+        </div>
+    </div>
+
+    <!-- 选择运营商 - 话费 -->
+    <div id="phone-operator-section" class="section-title">选择运营商</div>
+    <div id="phone-operator-grid" class="option-grid">
+        <div class="option-card active" data-val="mobile" onclick="selectOption('phoneOperator', 'mobile', '中国移动')">
+            <div class="option-icon">📱</div>
+            <div class="option-name">中国移动</div>
+        </div>
+        <div class="option-card" data-val="unicom" onclick="selectOption('phoneOperator', 'unicom', '中国联通')">
+            <div class="option-icon">📊</div>
+            <div class="option-name">中国联通</div>
+        </div>
+        <div class="option-card" data-val="telecom" onclick="selectOption('phoneOperator', 'telecom', '中国电信')">
+            <div class="option-icon">📡</div>
+            <div class="option-name">中国电信</div>
+        </div>
+    </div>
+
+    <!-- 选择品牌 - 加油卡 -->
+    <div id="oil-brand-section" class="section-title hidden">选择品牌</div>
+    <div id="oil-brand-grid" class="option-grid hidden">
+        <div class="option-card active" data-val="sinopec" onclick="selectOption('oilBrand', 'sinopec', '中国石化')">
+            <div class="option-icon">🛢️</div>
+            <div class="option-name">中国石化</div>
+        </div>
+        <div class="option-card" data-val="petrochina" onclick="selectOption('oilBrand', 'petrochina', '中国石油')">
+            <div class="option-icon">⛽</div>
+            <div class="option-name">中国石油</div>
+        </div>
+    </div>
+
+    <!-- 选择平台 - 抖音/快手 -->
+    <div id="platform-section" class="section-title hidden">选择平台</div>
+    <div id="platform-grid" class="option-grid hidden">
+        <div class="option-card active" data-val="ios" onclick="selectOption('platform', 'ios', 'iOS')">
+            <div class="option-icon">🍎</div>
+            <div class="option-name">iOS</div>
+        </div>
+        <div class="option-card" data-val="android" onclick="selectOption('platform', 'android', 'Android')">
+            <div class="option-icon">🤖</div>
+            <div class="option-name">Android</div>
+        </div>
+    </div>
+
+    <!-- 选择充值金额 -->
+    <div class="section-title">选择充值金额</div>
+    <div id="amount-grid" class="amount-grid">
+        <!-- 动态生成 -->
+    </div>
+
+    <!-- 输入框 -->
+    <div class="input-wrap">
+        <input type="tel" id="accountInput" class="input-field" placeholder="请输入手机号码">
+    </div>
+
+    <!-- 提交按钮 -->
+    <button class="submit-btn" onclick="goToConfirm()">请完善充值信息</button>
+
+    <!-- 实时充值动态 -->
+    <div class="dynamic-box">
+        <div class="dynamic-title"><div class="dynamic-dot"></div>实时充值动态</div>
+        <div class="dynamic-item">1000****6615792 中石化加油卡 充值200元</div>
+    </div>
+</div>
+
+<!-- 确认订单弹窗 -->
+<div id="confirmModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-icon">✓</div>
+        <h2 class="modal-title">确认充值订单</h2>
+        <div class="modal-row">
+            <span>服务类型:</span>
+            <span id="confirmService"></span>
+        </div>
+        <div class="modal-row">
+            <span id="confirmLabel1"></span>
+            <span id="confirmVal1"></span>
+        </div>
+        <div class="modal-row">
+            <span id="confirmLabel2"></span>
+            <span id="confirmVal2"></span>
+        </div>
+        <div class="modal-row">
+            <span>充值金额:</span>
+            <span id="confirmAmount"></span>
+        </div>
+        <div class="modal-row total">
+            <span>支付金额:</span>
+            <span class="value" id="confirmPayAmount"></span>
+        </div>
+        <div class="modal-buttons">
+            <button class="modal-btn cancel" onclick="closeConfirmModal()">取消</button>
+            <button class="modal-btn confirm" onclick="goToPay()">确认支付</button>
+        </div>
+    </div>
+</div>
+
+<!-- 支付页面 -->
+<div id="page-pay" class="page">
+    <div class="pay-header">
+        <h2>💎 <span id="payHeaderText"></span> <span id="payAmountText"></span></h2>
+        <div class="order-no">订单号：<span id="payOrderNo"></span></div>
+    </div>
+    <div class="pay-preview">
+        <div class="pay-preview-text" id="payPreviewText"></div>
+    </div>
+    <div class="pay-info-box">
+        <div class="pay-info-row">
+            <span>订单信息</span>
+            <span id="payOrderInfo"></span>
+        </div>
+        <div class="pay-info-row">
+            <span>单价</span>
+            <span>$<span id="payUnitPrice"></span></span>
+        </div>
+        <div class="pay-info-row">
+            <span>数量</span>
+            <span>1</span>
+        </div>
+        <div class="pay-info-row">
+            <span>金额</span>
+            <span class="amount">$<span id="payTotalAmount"></span> USDT</span>
+        </div>
+    </div>
+    <h3 class="pay-section-title">💳 USDT TRC20 支付</h3>
+    <div class="pay-address-box">
+        <div class="pay-address-label">请向以下地址转账支付</div>
+        <div class="pay-address-text" id="payAddressText">
+            币种：USDT (TRC20 网络)<br>
+            地址：TV2TuxxvGgzD2tQ8C6VDpqa7yMvn8AAmcK<br>
+            金额：<span id="payAddressAmount">0.00</span> USDT
+        </div>
+        <button class="copy-btn" onclick="copyPayAddress()">📋 复制地址</button>
+    </div>
+    <div class="pay-tip">
+        ⚠️ 注意事项：<br>
+        1. 请务必使用 TRC20 网络转账，不要使用其他网络<br>
+        2. 精确支付显示的金额，不要多转或少转<br>
+        3. 转账后通常 30-90 分钟内自动到账<br>
+        4. 超时未到账请联系客服核实
+    </div>
+    <button class="pay-btn confirm" onclick="alert('请先完成转账，转账后点击联系客服核实')">已完成转账</button>
+    <button class="pay-btn back" onclick="backToRecharge()">返回修改</button>
+</div>
+
+<!-- 联系客服页 -->
+<div id="page-contact" class="page">
+    <div class="header">联系客服</div>
+    <div class="contact-page">
+        <div class="contact-card">
+            <div class="contact-icon">💬</div>
+            <h2 class="contact-title">万兴未央客服</h2>
+            <p>如有任何问题，请通过以下方式联系我们</p>
+            <a href="https://t.me/wxch03" target="_blank" class="contact-link">🔗 点击联系 TG</a>
+            <p class="contact-desc">
+                Telegram ID: @wxch03<br>
+                服务时间：24小时在线<br>
+                通常 5-30 分钟内回复
+            </p>
+        </div>
+        <div class="notice-card">
+            <h3 class="notice-title">📌 温馨提示</h3>
+            <div class="notice-text">
+                • 转账前请确认订单信息无误<br>
+                • 转账后请保留交易哈希截图<br>
+                • 超时未到账请联系客服提供订单号<br>
+                • 客服不会主动索要密码和验证码<br>
+                • 认准官方TG：@wxch03
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 底部导航 -->
+<div class="footer-nav">
+    <div class="nav-item active" data-page="recharge">
+        <div class="nav-icon">🏠</div>
+        <div class="nav-text">充值</div>
+    </div>
+    <div class="nav-item" data-page="contact">
+        <div class="nav-icon">💬</div>
+        <div class="nav-text">联系客服</div>
+    </div>
+</div>
+
+<script>
+// 汇率：50元 = 4.86 USDT → 1元 = 0.0972 USDT
+const RATE = 0.0972;
+// 预留USDT收款地址
+const USDT_ADDRESS = 'TV2TuxxvGgzD2tQ8C6VDpqa7yMvn8AAmcK';
+
+// 所有档位数据，只保留≥200元的
+const amountData = {
+    phone: [
+        { cny: 200, usdt: (200 * RATE).toFixed(2) },
+        { cny: 300, usdt: (300 * RATE).toFixed(2) },
+        { cny: 500, usdt: (500 * RATE).toFixed(2) },
+        { cny: 0, usdt: 0, label: '自定义' }
+    ],
+    oil: [
+        { cny: 200, usdt: (200 * RATE).toFixed(2) },
+        { cny: 300, usdt: (300 * RATE).toFixed(2) },
+        { cny: 500, usdt: (500 * RATE).toFixed(2) },
+        { cny: 0, usdt: 0, label: '自定义' }
+    ],
+    douyin: [
+        { cny: 200, usdt: (200 * RATE).toFixed(2), coin: 2080 },
+        { cny: 500, usdt: (500 * RATE).toFixed(2), coin: 5180 },
+        { cny: 0, usdt: 0, label: '自定义' }
+    ],
+    kuaishou: [
+        { cny: 200, usdt: (200 * RATE).toFixed(2), coin: 2080 },
+        { cny: 500, usdt: (500 * RATE).toFixed(2), coin: 5180 },
+        { cny: 0, usdt: 0, label: '自定义' }
+    ]
+};
+
+// 状态
+let state = {
+    service: 'phone',
+    phoneOperator: 'mobile',
+    phoneOperatorName: '中国移动',
+    oilBrand: 'sinopec',
+    oilBrandName: '中国石化',
+    platform: 'ios',
+    platformName: 'iOS',
+    amount: 200,
+    amountUsdt: (200 * RATE).toFixed(2),
+    account: ''
+};
+
+// 生成订单号
+function generateOrderNo() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let res = 'LOCALMSV';
+    for(let i=0; i<6; i++) res += chars[Math.floor(Math.random()*chars.length)];
+    return res;
+}
+
+// 切换页面
+function switchPage(pageName) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${pageName}`).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => {
+        if(n.dataset.page === pageName) n.classList.add('active');
+    });
+    window.scrollTo(0,0);
+}
+
+// 选择服务类型
+function selectService(service) {
+    state.service = service;
+    document.querySelectorAll('.service-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.service === service);
+    });
+
+    // 显示/隐藏对应选项区
+    document.getElementById('phone-operator-section').classList.toggle('hidden', service !== 'phone');
+    document.getElementById('phone-operator-grid').classList.toggle('hidden', service !== 'phone');
+    document.getElementById('oil-brand-section').classList.toggle('hidden', service !== 'oil');
+    document.getElementById('oil-brand-grid').classList.toggle('hidden', service !== 'oil');
+    document.getElementById('platform-section').classList.toggle('hidden', service !== 'douyin' && service !== 'kuaishou');
+    document.getElementById('platform-grid').classList.toggle('hidden', service !== 'douyin' && service !== 'kuaishou');
+
+    // 更新输入框提示
+    const input = document.getElementById('accountInput');
+    if(service === 'phone') input.placeholder = '请输入手机号码';
+    else if(service === 'oil') input.placeholder = '请输入加油卡号';
+    else if(service === 'douyin') input.placeholder = '请输入抖音ID';
+    else if(service === 'kuaishou') input.placeholder = '请输入快手ID';
+
+    renderAmountGrid();
+}
+
+// 选择选项
+function selectOption(type, val, name) {
+    if(type === 'phoneOperator') {
+        state.phoneOperator = val;
+        state.phoneOperatorName = name;
+        document.querySelectorAll('#phone-operator-grid .option-card').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    } else if(type === 'oilBrand') {
+        state.oilBrand = val;
+        state.oilBrandName = name;
+        document.querySelectorAll('#oil-brand-grid .option-card').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    } else if(type === 'platform') {
+        state.platform = val;
+        state.platformName = name;
+        document.querySelectorAll('#platform-grid .option-card').forEach(c => c.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+}
+
+// 渲染金额网格
+function renderAmountGrid() {
+    const grid = document.getElementById('amount-grid');
+    const data = amountData[state.service];
+    grid.innerHTML = data.map((item, idx) => {
+        const isCustom = item.cny === 0;
+        const label = item.label || `${item.cny}元`;
+        const subLabel = isCustom ? '' : `${item.usdt} USDT`;
+        const active = (state.amount === item.cny) ? 'active' : '';
+        return `
+            <div class="amount-card ${active}" data-cny="${item.cny}" data-usdt="${item.usdt}" onclick="selectAmount(this, ${item.cny}, '${item.usdt}')">
+                <div class="amount-cny">${label}</div>
+                ${subLabel ? `<div class="amount-usdt">${subLabel}</div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// 选择金额
+function selectAmount(el, cny, usdt) {
+    state.amount = cny;
+    state.amountUsdt = usdt;
+    document.querySelectorAll('.amount-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+}
+
+// 前往确认订单
+function goToConfirm() {
+    const account = document.getElementById('accountInput').value.trim();
+    if(!account) {
+        alert('请输入账号信息');
+        return;
+    }
+    if(state.amount === 0) {
+        alert('请选择充值金额');
+        return;
+    }
+    state.account = account;
+
+    // 设置确认信息
+    let serviceName = '';
+    let label1 = '', val1 = '', label2 = '', val2 = '';
+
+    if(state.service === 'phone') {
+        serviceName = '话费充值';
+        label1 = '运营商:'; val1 = state.phoneOperatorName;
+        label2 = '手机号:'; val2 = state.account;
+    } else if(state.service === 'oil') {
+        serviceName = '加油卡充值';
+        label1 = '品牌:'; val1 = state.oilBrandName;
+        label2 = '卡号:'; val2 = state.account;
+    } else if(state.service === 'douyin') {
+        serviceName = '抖音充值';
+        label1 = '平台:'; val1 = state.platformName;
+        label2 = '抖音ID:'; val2 = state.account;
+    } else if(state.service === 'kuaishou') {
+        serviceName = '快手充值';
+        label1 = '平台:'; val1 = state.platformName;
+        label2 = '快手ID:'; val2 = state.account;
+    }
+
+    document.getElementById('confirmService').textContent = serviceName;
+    document.getElementById('confirmLabel1').textContent = label1;
+    document.getElementById('confirmVal1').textContent = val1;
+    document.getElementById('confirmLabel2').textContent = label2;
+    document.getElementById('confirmVal2').textContent = val2;
+    document.getElementById('confirmAmount').textContent = state.amount + '元';
+    document.getElementById('confirmPayAmount').textContent = state.amountUsdt + ' USDT';
+
+    document.getElementById('confirmModal').classList.add('show');
+}
+
+function closeConfirmModal() {
+    document.getElementById('confirmModal').classList.remove('show');
+}
+
+// 前往支付页面
+function goToPay() {
+    closeConfirmModal();
+    document.getElementById('page-recharge').classList.remove('active');
+    document.getElementById('page-pay').classList.add('active');
+
+    let serviceName = '';
+    if(state.service === 'phone') serviceName = state.account + ' 充值话费';
+    else if(state.service === 'oil') serviceName = state.account + ' 充值加油卡';
+    else if(state.service === 'douyin') serviceName = state.account + ' 充值抖币';
+    else if(state.service === 'kuaishou') serviceName = state.account + ' 充值快币';
+
+    document.getElementById('payHeaderText').textContent = serviceName;
+    document.getElementById('payAmountText').textContent = state.amount + '元';
+    document.getElementById('payOrderNo').textContent = generateOrderNo();
+    document.getElementById('payPreviewText').textContent = `${serviceName} ${String(state.amount).charAt(0)}***`;
+    document.getElementById('payOrderInfo').textContent = `${serviceName} ${state.amount}元`;
+    document.getElementById('payUnitPrice').textContent = state.amountUsdt;
+    document.getElementById('payTotalAmount').textContent = state.amountUsdt;
+    document.getElementById('payAddressAmount').textContent = state.amountUsdt;
+}
+
+// 复制支付地址
+function copyPayAddress() {
+    const text = `币种：USDT (TRC20 网络)\n地址：${USDT_ADDRESS}\n金额：${state.amountUsdt} USDT`;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('✅ 地址已复制到剪贴板');
+    }).catch(() => {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('✅ 地址已复制到剪贴板');
+    });
+}
+
+// 返回充值页
+function backToRecharge() {
+    document.getElementById('page-pay').classList.remove('active');
+    document.getElementById('page-recharge').classList.add('active');
+}
+
+// 底部导航点击
+document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        switchPage(item.dataset.page);
+    });
+});
+
+// 初始化
+renderAmountGrid();
+</script>
+</body>
+</html>
