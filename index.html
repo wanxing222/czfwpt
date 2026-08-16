@@ -104,8 +104,34 @@
             border-color: #E53935;
             background: #FFF3F3;
         }
+        .amount-card.custom {
+            border-style: dashed;
+        }
+        .amount-card.custom.active {
+            border-style: solid;
+        }
         .amount-cny { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
         .amount-usdt { font-size: 14px; color: #E53935; font-weight: bold; }
+
+        /* 自定义金额输入框 */
+        .custom-amount-wrap {
+            padding: 0 15px 15px;
+            display: none;
+        }
+        .custom-amount-wrap.show { display: block; }
+        .custom-amount-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #E53935;
+            border-radius: 10px;
+            font-size: 18px;
+            outline: none;
+        }
+        .custom-amount-tip {
+            font-size: 13px;
+            color: #E53935;
+            margin-top: 8px;
+        }
 
         /* 输入框 */
         .input-wrap { padding: 0 15px 15px; }
@@ -153,6 +179,11 @@
             height: 10px;
             background: #4CAF50;
             border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.3; }
         }
         .dynamic-item {
             background: white;
@@ -160,6 +191,7 @@
             border-radius: 6px;
             font-size: 14px;
             color: #666;
+            transition: opacity 0.3s;
         }
 
         /* 弹窗 */
@@ -506,6 +538,12 @@
         <!-- 动态生成 -->
     </div>
 
+    <!-- 自定义金额输入框 -->
+    <div id="customAmountWrap" class="custom-amount-wrap">
+        <input type="number" id="customAmountInput" class="custom-amount-input" placeholder="请输入金额（最低200元）" min="200" oninput="updateCustomAmount(this.value)">
+        <div class="custom-amount-tip">💡 最低充值200元，上不封顶</div>
+    </div>
+
     <!-- 输入框 -->
     <div class="input-wrap">
         <input type="tel" id="accountInput" class="input-field" placeholder="请输入手机号码">
@@ -517,7 +555,7 @@
     <!-- 实时充值动态 -->
     <div class="dynamic-box">
         <div class="dynamic-title"><div class="dynamic-dot"></div>实时充值动态</div>
-        <div class="dynamic-item">1000****6615792 中石化加油卡 充值200元</div>
+        <div id="dynamicContent" class="dynamic-item">1000****6615792 中石化加油卡 充值200元</div>
     </div>
 </div>
 
@@ -646,6 +684,41 @@
 const RATE = 0.0972;
 // 预留USDT收款地址
 const USDT_ADDRESS = 'TV2TuxxvGgzD2tQ8C6VDpqa7yMvn8AAmcK';
+const MIN_AMOUNT = 200;
+const DYNAMIC_UPDATE_INTERVAL = 10 * 60 * 1000; // 10分钟
+
+// 动态数据池
+const dynamicServices = [
+    '中国移动', '中国联通', '中国电信', '中石化加油卡', '中石油加油卡',
+    '抖音充值', '快手充值'
+];
+const dynamicAmounts = [200, 300, 500, 800, 1000, 1500, 2000];
+
+// 生成随机手机号前缀+****+后几位
+function generateRandomPhone() {
+    const prefixes = ['130','131','132','133','134','135','136','137','138','139','150','151','152','153','155','156','157','158','159','186','187','188','189'];
+    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const suffix = Math.floor(Math.random() * 900000 + 100000);
+    return `${prefix}****${suffix}`;
+}
+
+// 生成随机动态记录
+function generateDynamicRecord() {
+    const phone = generateRandomPhone();
+    const service = dynamicServices[Math.floor(Math.random() * dynamicServices.length)];
+    const amount = dynamicAmounts[Math.floor(Math.random() * dynamicAmounts.length)];
+    return `${phone} ${service} 充值${amount}元`;
+}
+
+// 更新动态显示
+function updateDynamicDisplay() {
+    const content = document.getElementById('dynamicContent');
+    content.style.opacity = '0';
+    setTimeout(() => {
+        content.textContent = generateDynamicRecord();
+        content.style.opacity = '1';
+    }, 300);
+}
 
 // 所有档位数据，只保留≥200元的
 const amountData = {
@@ -653,23 +726,23 @@ const amountData = {
         { cny: 200, usdt: (200 * RATE).toFixed(2) },
         { cny: 300, usdt: (300 * RATE).toFixed(2) },
         { cny: 500, usdt: (500 * RATE).toFixed(2) },
-        { cny: 0, usdt: 0, label: '自定义' }
+        { cny: -1, usdt: 0, label: '自定义' }
     ],
     oil: [
         { cny: 200, usdt: (200 * RATE).toFixed(2) },
         { cny: 300, usdt: (300 * RATE).toFixed(2) },
         { cny: 500, usdt: (500 * RATE).toFixed(2) },
-        { cny: 0, usdt: 0, label: '自定义' }
+        { cny: -1, usdt: 0, label: '自定义' }
     ],
     douyin: [
         { cny: 200, usdt: (200 * RATE).toFixed(2), coin: 2080 },
         { cny: 500, usdt: (500 * RATE).toFixed(2), coin: 5180 },
-        { cny: 0, usdt: 0, label: '自定义' }
+        { cny: -1, usdt: 0, label: '自定义' }
     ],
     kuaishou: [
         { cny: 200, usdt: (200 * RATE).toFixed(2), coin: 2080 },
         { cny: 500, usdt: (500 * RATE).toFixed(2), coin: 5180 },
-        { cny: 0, usdt: 0, label: '自定义' }
+        { cny: -1, usdt: 0, label: '自定义' }
     ]
 };
 
@@ -684,6 +757,7 @@ let state = {
     platformName: 'iOS',
     amount: 200,
     amountUsdt: (200 * RATE).toFixed(2),
+    isCustom: false,
     account: ''
 };
 
@@ -756,25 +830,59 @@ function renderAmountGrid() {
     const grid = document.getElementById('amount-grid');
     const data = amountData[state.service];
     grid.innerHTML = data.map((item, idx) => {
-        const isCustom = item.cny === 0;
+        const isCustom = item.cny === -1;
         const label = item.label || `${item.cny}元`;
         const subLabel = isCustom ? '' : `${item.usdt} USDT`;
-        const active = (state.amount === item.cny) ? 'active' : '';
+        const active = (!state.isCustom && state.amount === item.cny) ? 'active' : '';
+        const customClass = isCustom ? 'custom' : '';
         return `
-            <div class="amount-card ${active}" data-cny="${item.cny}" data-usdt="${item.usdt}" onclick="selectAmount(this, ${item.cny}, '${item.usdt}')">
+            <div class="amount-card ${active} ${customClass}" data-cny="${item.cny}" data-usdt="${item.usdt}" onclick="selectAmount(this, ${item.cny}, '${item.usdt}')">
                 <div class="amount-cny">${label}</div>
                 ${subLabel ? `<div class="amount-usdt">${subLabel}</div>` : ''}
             </div>
         `;
     }).join('');
+    
+    // 隐藏自定义输入框
+    document.getElementById('customAmountWrap').classList.remove('show');
 }
 
 // 选择金额
 function selectAmount(el, cny, usdt) {
-    state.amount = cny;
-    state.amountUsdt = usdt;
     document.querySelectorAll('.amount-card').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
+
+    if(cny === -1) {
+        // 选择自定义
+        state.isCustom = true;
+        state.amount = 0;
+        state.amountUsdt = '0.00';
+        document.getElementById('customAmountWrap').classList.add('show');
+        document.getElementById('customAmountInput').value = '';
+        document.getElementById('customAmountInput').focus();
+    } else {
+        // 选择固定金额
+        state.isCustom = false;
+        state.amount = cny;
+        state.amountUsdt = usdt;
+        document.getElementById('customAmountWrap').classList.remove('show');
+    }
+}
+
+// 更新自定义金额
+function updateCustomAmount(val) {
+    let num = parseInt(val) || 0;
+    if(num > 0 && num < MIN_AMOUNT) {
+        num = MIN_AMOUNT;
+        document.getElementById('customAmountInput').value = num;
+    }
+    if(num >= MIN_AMOUNT) {
+        state.amount = num;
+        state.amountUsdt = (num * RATE).toFixed(2);
+    } else {
+        state.amount = 0;
+        state.amountUsdt = '0.00';
+    }
 }
 
 // 前往确认订单
@@ -784,8 +892,8 @@ function goToConfirm() {
         alert('请输入账号信息');
         return;
     }
-    if(state.amount === 0) {
-        alert('请选择充值金额');
+    if(state.amount < MIN_AMOUNT) {
+        alert(`请选择或输入充值金额，最低${MIN_AMOUNT}元`);
         return;
     }
     state.account = account;
@@ -880,6 +988,8 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
 // 初始化
 renderAmountGrid();
+// 启动定时更新动态记录
+setInterval(updateDynamicDisplay, DYNAMIC_UPDATE_INTERVAL);
 </script>
 </body>
 </html>
