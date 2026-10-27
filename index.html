@@ -111,7 +111,9 @@
             border-style: solid;
         }
         .amount-cny { font-size: 20px; font-weight: bold; margin-bottom: 4px; }
+        .amount-discount { font-size: 12px; color: #00C853; font-weight: bold; margin-bottom: 2px; }
         .amount-usdt { font-size: 14px; color: #E53935; font-weight: bold; }
+        .amount-pay-cny { font-size: 13px; color: #1677FF; font-weight: bold; margin-top: 2px; }
 
         /* 自定义金额输入框 */
         .custom-amount-wrap {
@@ -247,6 +249,12 @@
             padding-top: 15px;
         }
         .modal-row.total .value { color: #E53935; }
+        .modal-row.discount {
+            background: #E8F5E9;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 5px 0;
+        }
         .modal-buttons {
             display: flex;
             gap: 12px;
@@ -299,6 +307,42 @@
             color: #1565C0;
             line-height: 1.5;
         }
+        .pay-discount-tag {
+            display: inline-block;
+            background: #00C853;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .pay-method-box {
+            display: flex;
+            gap: 10px;
+            margin: 20px 15px;
+        }
+        .pay-method-item {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+            font-weight: bold;
+            color: #666;
+        }
+        .pay-method-item.active.alipay {
+            border-color: #1677FF;
+            background: #E6F4FF;
+            color: #1677FF;
+        }
+        .pay-method-item.active.usdt {
+            border-color: #00B597;
+            background: #E0F2F1;
+            color: #00B597;
+        }
         .pay-info-box {
             margin: 0 15px 20px;
             border: 1px solid #E0E0E0;
@@ -346,6 +390,20 @@
             color: #E65100;
             margin-bottom: 15px;
             border: 1px solid #FFD54F;
+        }
+        .alipay-link-box {
+            text-align: center;
+            padding: 10px 0;
+        }
+        .alipay-btn {
+            display: inline-block;
+            padding: 14px 40px;
+            background: #1677FF;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: bold;
         }
         .copy-btn {
             background: #FF9800;
@@ -464,7 +522,8 @@
         <div class="hot-tag">🔥 热门充值服务</div>
     </div>
 
-    <!-- 选择服务类型 -->
+   
+<!-- 选择服务类型 -->
     <div class="section-title">选择服务类型</div>
     <div class="service-grid">
         <div class="service-card active" data-service="phone" onclick="selectService('phone')">
@@ -533,7 +592,7 @@
     </div>
 
     <!-- 选择充值金额 -->
-    <div class="section-title">选择充值金额</div>
+    <div class="section-title">选择充值金额 <span style="color:#00C853; font-size:14px; font-weight:normal;">(7折优惠)</span></div>
     <div id="amount-grid" class="amount-grid">
         <!-- 动态生成 -->
     </div>
@@ -541,7 +600,7 @@
     <!-- 自定义金额输入框 -->
     <div id="customAmountWrap" class="custom-amount-wrap">
         <input type="number" id="customAmountInput" class="custom-amount-input" placeholder="请输入金额（最低200元）" min="200" oninput="updateCustomAmount(this.value)">
-        <div class="custom-amount-tip">💡 最低充值200元，上不封顶</div>
+        <div class="custom-amount-tip">💡 7折优惠后：<span id="customDiscountPrice">0.00</span> 元 · 最低充值200元，上不封顶</div>
     </div>
 
     <!-- 输入框 -->
@@ -550,12 +609,12 @@
     </div>
 
     <!-- 提交按钮 -->
-    <button class="submit-btn" onclick="goToConfirm()">请完善充值信息</button>
+    <button class="submit-btn" onclick="goToConfirm()">确认充值</button>
 
     <!-- 实时充值动态 -->
     <div class="dynamic-box">
         <div class="dynamic-title"><div class="dynamic-dot"></div>实时充值动态</div>
-        <div id="dynamicContent" class="dynamic-item">1000****6615792 中石化加油卡 充值200元</div>
+        <div id="dynamicContent" class="dynamic-item">1000****6615792 中石化加油卡 充值200元 实付140元</div>
     </div>
 </div>
 
@@ -577,16 +636,20 @@
             <span id="confirmVal2"></span>
         </div>
         <div class="modal-row">
-            <span>充值金额:</span>
+            <span>充值面值:</span>
             <span id="confirmAmount"></span>
         </div>
+        <div class="modal-row discount">
+            <span>优惠折扣:</span>
+            <span style="color:#00C853; font-weight:bold;">7折优惠</span>
+        </div>
         <div class="modal-row total">
-            <span>支付金额:</span>
+            <span>实付金额:</span>
             <span class="value" id="confirmPayAmount"></span>
         </div>
         <div class="modal-buttons">
             <button class="modal-btn cancel" onclick="closeConfirmModal()">取消</button>
-            <button class="modal-btn confirm" onclick="goToPay()">确认支付</button>
+            <button class="modal-btn confirm" onclick="goToPay()">去支付</button>
         </div>
     </div>
 </div>
@@ -594,48 +657,103 @@
 <!-- 支付页面 -->
 <div id="page-pay" class="page">
     <div class="pay-header">
-        <h2>💎 <span id="payHeaderText"></span> <span id="payAmountText"></span></h2>
+        <h2>💎 <span id="payHeaderText"></span> · 7折优惠</h2>
         <div class="order-no">订单号：<span id="payOrderNo"></span></div>
     </div>
     <div class="pay-preview">
+        <div class="pay-discount-tag">🔥 限时7折</div>
         <div class="pay-preview-text" id="payPreviewText"></div>
     </div>
-    <div class="pay-info-box">
-        <div class="pay-info-row">
-            <span>订单信息</span>
-            <span id="payOrderInfo"></span>
+
+    <!-- 支付方式选择 -->
+    <div class="pay-method-box">
+        <div class="pay-method-item active alipay" data-method="alipay" onclick="switchPayMethod('alipay')">
+            💰 支付宝
         </div>
-        <div class="pay-info-row">
-            <span>单价</span>
-            <span>$<span id="payUnitPrice"></span></span>
-        </div>
-        <div class="pay-info-row">
-            <span>数量</span>
-            <span>1</span>
-        </div>
-        <div class="pay-info-row">
-            <span>金额</span>
-            <span class="amount">$<span id="payTotalAmount"></span> USDT</span>
+        <div class="pay-method-item usdt" data-method="usdt" onclick="switchPayMethod('usdt')">
+            💎 USDT
         </div>
     </div>
-    <h3 class="pay-section-title">💳 USDT TRC20 支付</h3>
-    <div class="pay-address-box">
-        <div class="pay-address-label">请向以下地址转账支付</div>
-        <div class="pay-address-text" id="payAddressText">
-            币种：USDT (TRC20 网络)<br>
-            地址：TV2TuxxvGgzD2tQ8C6VDpqa7yMvn8AAmcK<br>
-            金额：<span id="payAddressAmount">0.00</span> USDT
+
+    <!-- 支付宝支付内容 -->
+    <div id="alipayContent">
+        <div class="pay-info-box">
+            <div class="pay-info-row">
+                <span>订单信息</span>
+                <span id="payOrderInfo"></span>
+            </div>
+            <div class="pay-info-row">
+                <span>充值面值</span>
+                <span id="payFaceValue"></span>
+            </div>
+            <div class="pay-info-row">
+                <span>7折优惠价</span>
+                <span class="amount" style="color:#1677FF;">￥<span id="payAlipayAmount">0.00</span></span>
+            </div>
         </div>
-        <button class="copy-btn" onclick="copyPayAddress()">📋 复制地址</button>
+        <h3 class="pay-section-title">💰 支付宝 扫码支付</h3>
+        <div class="pay-address-box" style="background:#E6F4FF; border-color:#1677FF;">
+            <div class="pay-address-label" style="color:#1677FF;">请使用支付宝扫码或点击按钮付款</div>
+            <div class="alipay-link-box">
+                <a href="https://qr.alipay.com/fkx16193ubdgzfllkobdo53" target="_blank" class="alipay-btn">
+                    📱 打开支付宝付款
+                </a>
+            </div>
+            <div style="margin-top:15px; font-size:14px; color:#666; line-height:1.6;">
+                付款金额：<strong style="color:#1677FF; font-size:16px;">￥<span id="alipayPayAmount">0.00</span></strong>
+            </div>
+        </div>
+        <div class="pay-tip" style="background:#E6F4FF; color:#0E5CD9;">
+            ⚠️ 注意事项：<br>
+            1. 点击上方按钮跳转至支付宝付款<br>
+            2. 请精确支付显示的金额，不要多转或少转<br>
+            3. 付款后通常 30-90 分钟内自动到账<br>
+            4. 超时未到账请联系客服核实<br>
+            5. 客服：<a href="https://t.me/wxch03" target="_blank" style="color:inherit; text-decoration:underline;">@wxch03</a>
+        </div>
     </div>
-    <div class="pay-tip">
-        ⚠️ 注意事项：<br>
-        1. 请务必使用 TRC20 网络转账，不要使用其他网络<br>
-        2. 精确支付显示的金额，不要多转或少转<br>
-        3. 转账后通常 30-90 分钟内自动到账<br>
-        4. 超时未到账请联系客服核实
+
+    <!-- USDT支付内容 -->
+    <div id="usdtContent" class="hidden">
+        <div class="pay-info-box">
+            <div class="pay-info-row">
+                <span>订单信息</span>
+                <span id="payOrderInfo2"></span>
+            </div>
+            <div class="pay-info-row">
+                <span>人民币金额</span>
+                <span>￥<span id="payCnyAmount">0.00</span></span>
+            </div>
+            <div class="pay-info-row">
+                <span>7折后金额</span>
+                <span>￥<span id="payCnyDiscount">0.00</span></span>
+            </div>
+            <div class="pay-info-row">
+                <span>USDT金额</span>
+                <span class="amount">$<span id="payUsdtAmount">0.00</span> USDT</span>
+            </div>
+        </div>
+        <h3 class="pay-section-title">💳 USDT TRC20 支付</h3>
+        <div class="pay-address-box">
+            <div class="pay-address-label">请向以下地址转账支付</div>
+            <div class="pay-address-text">
+                币种：USDT (TRC20 网络)<br>
+                地址：TV2TuxxvGgzD2tQ8C6VDpqa7yMvn8AAmcK<br>
+                金额：<span id="usdtPayAmount">0.00</span> USDT
+            </div>
+            <button class="copy-btn" onclick="copyPayAddress()">📋 复制地址与金额</button>
+        </div>
+        <div class="pay-tip">
+            ⚠️ 注意事项：<br>
+            1. 请务必使用 TRC20 网络转账，不要使用其他网络<br>
+            2. 精确支付显示的金额，不要多转或少转<br>
+            3. 转账后通常 30-90 分钟内自动到账<br>
+            4. 超时未到账请联系客服核实<br>
+            5. 客服：<a href="https://t.me/wxch03" target="_blank" style="color:inherit; text-decoration:underline;">@wxch03</a>
+        </div>
     </div>
-    <button class="pay-btn confirm" onclick="alert('请先完成转账，转账后点击联系客服核实')">已完成转账</button>
+
+    <button class="pay-btn confirm" onclick="alert('请先完成转账，转账后点击联系客服核实')">已完成转账/付款</button>
     <button class="pay-btn back" onclick="backToRecharge()">返回修改</button>
 </div>
 
@@ -680,21 +798,20 @@
 </div>
 
 <script>
-// 汇率：50元 = 4.86 USDT → 1元 = 0.0972 USDT
-const RATE = 0.0972;
-// 预留USDT收款地址
+// 配置
+const DISCOUNT_RATE = 0.7; // 7折
+const USDT_RATE = 7.25; // 1 USDT = 7.25 CNY
 const USDT_ADDRESS = 'TV2TuxxvGgzD2tQ8C6VDpqa7yMvn8AAmcK';
 const MIN_AMOUNT = 200;
-const DYNAMIC_UPDATE_INTERVAL = 10 * 60 * 1000; // 10分钟
+const DYNAMIC_UPDATE_INTERVAL = 10 * 60 * 1000;
 
-// 动态数据池
+// 动态数据
 const dynamicServices = [
     '中国移动', '中国联通', '中国电信', '中石化加油卡', '中石油加油卡',
     '抖音充值', '快手充值'
 ];
 const dynamicAmounts = [200, 300, 500, 800, 1000, 1500, 2000];
 
-// 生成随机手机号前缀+****+后几位
 function generateRandomPhone() {
     const prefixes = ['130','131','132','133','134','135','136','137','138','139','150','151','152','153','155','156','157','158','159','186','187','188','189'];
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
@@ -702,15 +819,14 @@ function generateRandomPhone() {
     return `${prefix}****${suffix}`;
 }
 
-// 生成随机动态记录
 function generateDynamicRecord() {
     const phone = generateRandomPhone();
     const service = dynamicServices[Math.floor(Math.random() * dynamicServices.length)];
     const amount = dynamicAmounts[Math.floor(Math.random() * dynamicAmounts.length)];
-    return `${phone} ${service} 充值${amount}元`;
+    const payAmount = (amount * DISCOUNT_RATE).toFixed(0);
+    return `${phone} ${service} 充值${amount}元 实付${payAmount}元`;
 }
 
-// 更新动态显示
 function updateDynamicDisplay() {
     const content = document.getElementById('dynamicContent');
     content.style.opacity = '0';
@@ -720,29 +836,29 @@ function updateDynamicDisplay() {
     }, 300);
 }
 
-// 所有档位数据，只保留≥200元的
+// 金额档位数据
 const amountData = {
     phone: [
-        { cny: 200, usdt: (200 * RATE).toFixed(2) },
-        { cny: 300, usdt: (300 * RATE).toFixed(2) },
-        { cny: 500, usdt: (500 * RATE).toFixed(2) },
-        { cny: -1, usdt: 0, label: '自定义' }
+        { cny: 200 },
+        { cny: 300 },
+        { cny: 500 },
+        { cny: -1, label: '自定义' }
     ],
     oil: [
-        { cny: 200, usdt: (200 * RATE).toFixed(2) },
-        { cny: 300, usdt: (300 * RATE).toFixed(2) },
-        { cny: 500, usdt: (500 * RATE).toFixed(2) },
-        { cny: -1, usdt: 0, label: '自定义' }
+        { cny: 200 },
+        { cny: 300 },
+        { cny: 500 },
+        { cny: -1, label: '自定义' }
     ],
     douyin: [
-        { cny: 200, usdt: (200 * RATE).toFixed(2), coin: 2080 },
-        { cny: 500, usdt: (500 * RATE).toFixed(2), coin: 5180 },
-        { cny: -1, usdt: 0, label: '自定义' }
+        { cny: 200, coin: 2080 },
+        { cny: 500, coin: 5180 },
+        { cny: -1, label: '自定义' }
     ],
     kuaishou: [
-        { cny: 200, usdt: (200 * RATE).toFixed(2), coin: 2080 },
-        { cny: 500, usdt: (500 * RATE).toFixed(2), coin: 5180 },
-        { cny: -1, usdt: 0, label: '自定义' }
+        { cny: 200, coin: 2080 },
+        { cny: 500, coin: 5180 },
+        { cny: -1, label: '自定义' }
     ]
 };
 
@@ -756,20 +872,20 @@ let state = {
     platform: 'ios',
     platformName: 'iOS',
     amount: 200,
-    amountUsdt: (200 * RATE).toFixed(2),
+    payAmount: (200 * DISCOUNT_RATE).toFixed(2),
+    usdtAmount: ((200 * DISCOUNT_RATE) / USDT_RATE).toFixed(2),
     isCustom: false,
-    account: ''
+    account: '',
+    payMethod: 'alipay'
 };
 
-// 生成订单号
 function generateOrderNo() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let res = 'LOCALMSV';
-    for(let i=0; i<6; i++) res += chars[Math.floor(Math.random()*chars.length)];
+    let res = 'WXCF';
+    for(let i=0; i<8; i++) res += chars[Math.floor(Math.random()*chars.length)];
     return res;
 }
 
-// 切换页面
 function switchPage(pageName) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(`page-${pageName}`).classList.add('active');
@@ -780,14 +896,12 @@ function switchPage(pageName) {
     window.scrollTo(0,0);
 }
 
-// 选择服务类型
 function selectService(service) {
     state.service = service;
     document.querySelectorAll('.service-card').forEach(card => {
         card.classList.toggle('active', card.dataset.service === service);
     });
 
-    // 显示/隐藏对应选项区
     document.getElementById('phone-operator-section').classList.toggle('hidden', service !== 'phone');
     document.getElementById('phone-operator-grid').classList.toggle('hidden', service !== 'phone');
     document.getElementById('oil-brand-section').classList.toggle('hidden', service !== 'oil');
@@ -795,7 +909,6 @@ function selectService(service) {
     document.getElementById('platform-section').classList.toggle('hidden', service !== 'douyin' && service !== 'kuaishou');
     document.getElementById('platform-grid').classList.toggle('hidden', service !== 'douyin' && service !== 'kuaishou');
 
-    // 更新输入框提示
     const input = document.getElementById('accountInput');
     if(service === 'phone') input.placeholder = '请输入手机号码';
     else if(service === 'oil') input.placeholder = '请输入加油卡号';
@@ -805,7 +918,6 @@ function selectService(service) {
     renderAmountGrid();
 }
 
-// 选择选项
 function selectOption(type, val, name) {
     if(type === 'phoneOperator') {
         state.phoneOperator = val;
@@ -825,51 +937,53 @@ function selectOption(type, val, name) {
     }
 }
 
-// 渲染金额网格
 function renderAmountGrid() {
     const grid = document.getElementById('amount-grid');
     const data = amountData[state.service];
     grid.innerHTML = data.map((item, idx) => {
         const isCustom = item.cny === -1;
         const label = item.label || `${item.cny}元`;
-        const subLabel = isCustom ? '' : `${item.usdt} USDT`;
+        const discountPrice = isCustom ? '' : (item.cny * DISCOUNT_RATE).toFixed(2);
+        const usdtPrice = isCustom ? '' : ((item.cny * DISCOUNT_RATE) / USDT_RATE).toFixed(2);
         const active = (!state.isCustom && state.amount === item.cny) ? 'active' : '';
         const customClass = isCustom ? 'custom' : '';
         return `
-            <div class="amount-card ${active} ${customClass}" data-cny="${item.cny}" data-usdt="${item.usdt}" onclick="selectAmount(this, ${item.cny}, '${item.usdt}')">
+            <div class="amount-card ${active} ${customClass}" 
+                 data-cny="${item.cny}" 
+                 data-pay="${discountPrice}"
+                 data-usdt="${usdtPrice}"
+                 onclick="selectAmount(this, ${item.cny}, '${discountPrice}', '${usdtPrice}')">
                 <div class="amount-cny">${label}</div>
-                ${subLabel ? `<div class="amount-usdt">${subLabel}</div>` : ''}
+                ${isCustom ? '' : `<div class="amount-discount">7折</div><div class="amount-pay-cny">￥${discountPrice}</div><div class="amount-usdt">${usdtPrice} USDT</div>`}
             </div>
         `;
     }).join('');
     
-    // 隐藏自定义输入框
     document.getElementById('customAmountWrap').classList.remove('show');
 }
 
-// 选择金额
-function selectAmount(el, cny, usdt) {
+function selectAmount(el, cny, payPrice, usdtPrice) {
     document.querySelectorAll('.amount-card').forEach(c => c.classList.remove('active'));
     el.classList.add('active');
 
     if(cny === -1) {
-        // 选择自定义
         state.isCustom = true;
         state.amount = 0;
-        state.amountUsdt = '0.00';
+        state.payAmount = '0.00';
+        state.usdtAmount = '0.00';
         document.getElementById('customAmountWrap').classList.add('show');
         document.getElementById('customAmountInput').value = '';
+        document.getElementById('customDiscountPrice').textContent = '0.00';
         document.getElementById('customAmountInput').focus();
     } else {
-        // 选择固定金额
         state.isCustom = false;
         state.amount = cny;
-        state.amountUsdt = usdt;
+        state.payAmount = payPrice;
+        state.usdtAmount = usdtPrice;
         document.getElementById('customAmountWrap').classList.remove('show');
     }
 }
 
-// 更新自定义金额
 function updateCustomAmount(val) {
     let num = parseInt(val) || 0;
     if(num > 0 && num < MIN_AMOUNT) {
@@ -878,14 +992,17 @@ function updateCustomAmount(val) {
     }
     if(num >= MIN_AMOUNT) {
         state.amount = num;
-        state.amountUsdt = (num * RATE).toFixed(2);
+        state.payAmount = (num * DISCOUNT_RATE).toFixed(2);
+        state.usdtAmount = ((num * DISCOUNT_RATE) / USDT_RATE).toFixed(2);
+        document.getElementById('customDiscountPrice').textContent = state.payAmount;
     } else {
         state.amount = 0;
-        state.amountUsdt = '0.00';
+        state.payAmount = '0.00';
+        state.usdtAmount = '0.00';
+        document.getElementById('customDiscountPrice').textContent = '0.00';
     }
 }
 
-// 前往确认订单
 function goToConfirm() {
     const account = document.getElementById('accountInput').value.trim();
     if(!account) {
@@ -898,7 +1015,6 @@ function goToConfirm() {
     }
     state.account = account;
 
-    // 设置确认信息
     let serviceName = '';
     let label1 = '', val1 = '', label2 = '', val2 = '';
 
@@ -926,7 +1042,7 @@ function goToConfirm() {
     document.getElementById('confirmLabel2').textContent = label2;
     document.getElementById('confirmVal2').textContent = val2;
     document.getElementById('confirmAmount').textContent = state.amount + '元';
-    document.getElementById('confirmPayAmount').textContent = state.amountUsdt + ' USDT';
+    document.getElementById('confirmPayAmount').textContent = '￥' + state.payAmount + ' / ' + state.usdtAmount + ' USDT';
 
     document.getElementById('confirmModal').classList.add('show');
 }
@@ -935,7 +1051,23 @@ function closeConfirmModal() {
     document.getElementById('confirmModal').classList.remove('show');
 }
 
-// 前往支付页面
+function switchPayMethod(method) {
+    state.payMethod = method;
+    document.querySelectorAll('.pay-method-item').forEach(el => {
+        el.classList.remove('active', 'alipay', 'usdt');
+        if(el.dataset.method === method) {
+            el.classList.add('active', method);
+        }
+    });
+    if(method === 'alipay') {
+        document.getElementById('alipayContent').classList.remove('hidden');
+        document.getElementById('usdtContent').classList.add('hidden');
+    } else {
+        document.getElementById('alipayContent').classList.add('hidden');
+        document.getElementById('usdtContent').classList.remove('hidden');
+    }
+}
+
 function goToPay() {
     closeConfirmModal();
     document.getElementById('page-recharge').classList.remove('active');
@@ -947,19 +1079,31 @@ function goToPay() {
     else if(state.service === 'douyin') serviceName = state.account + ' 充值抖币';
     else if(state.service === 'kuaishou') serviceName = state.account + ' 充值快币';
 
+    const orderNo = generateOrderNo();
+    
     document.getElementById('payHeaderText').textContent = serviceName;
-    document.getElementById('payAmountText').textContent = state.amount + '元';
-    document.getElementById('payOrderNo').textContent = generateOrderNo();
-    document.getElementById('payPreviewText').textContent = `${serviceName} ${String(state.amount).charAt(0)}***`;
-    document.getElementById('payOrderInfo').textContent = `${serviceName} ${state.amount}元`;
-    document.getElementById('payUnitPrice').textContent = state.amountUsdt;
-    document.getElementById('payTotalAmount').textContent = state.amountUsdt;
-    document.getElementById('payAddressAmount').textContent = state.amountUsdt;
+    document.getElementById('payOrderNo').textContent = orderNo;
+    document.getElementById('payPreviewText').textContent = `面值${state.amount}元\n实付￥${state.payAmount}`;
+    
+    // 支付宝内容
+    document.getElementById('payOrderInfo').textContent = `${serviceName}`;
+    document.getElementById('payFaceValue').textContent = `￥${state.amount}.00`;
+    document.getElementById('payAlipayAmount').textContent = state.payAmount;
+    document.getElementById('alipayPayAmount').textContent = state.payAmount;
+    
+    // USDT内容
+    document.getElementById('payOrderInfo2').textContent = `${serviceName}`;
+    document.getElementById('payCnyAmount').textContent = state.amount + '.00';
+    document.getElementById('payCnyDiscount').textContent = state.payAmount;
+    document.getElementById('payUsdtAmount').textContent = state.usdtAmount;
+    document.getElementById('usdtPayAmount').textContent = state.usdtAmount;
+    
+    // 默认选中支付宝
+    switchPayMethod('alipay');
 }
 
-// 复制支付地址
 function copyPayAddress() {
-    const text = `币种：USDT (TRC20 网络)\n地址：${USDT_ADDRESS}\n金额：${state.amountUsdt} USDT`;
+    const text = `币种：USDT (TRC20 网络)\n地址：${USDT_ADDRESS}\n金额：${state.usdtAmount} USDT`;
     navigator.clipboard.writeText(text).then(() => {
         alert('✅ 地址已复制到剪贴板');
     }).catch(() => {
@@ -973,22 +1117,18 @@ function copyPayAddress() {
     });
 }
 
-// 返回充值页
 function backToRecharge() {
     document.getElementById('page-pay').classList.remove('active');
     document.getElementById('page-recharge').classList.add('active');
 }
 
-// 底部导航点击
 document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', () => {
         switchPage(item.dataset.page);
     });
 });
 
-// 初始化
 renderAmountGrid();
-// 启动定时更新动态记录
 setInterval(updateDynamicDisplay, DYNAMIC_UPDATE_INTERVAL);
 </script>
 </body>
