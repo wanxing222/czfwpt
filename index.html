@@ -458,14 +458,20 @@
         .contact-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
         .contact-link {
             display: inline-block;
-            background: linear-gradient(135deg, #0088CC, #0099DD);
+            background: linear-gradient(135deg, #12B7F5, #0099E6);
             color: white !important;
             text-decoration: none;
             padding: 12px 30px;
             border-radius: 10px;
             font-size: 17px;
             font-weight: bold;
-            margin: 10px 0;
+            margin: 8px 5px;
+        }
+        .contact-link.qq {
+            background: linear-gradient(135deg, #12B7F5, #0099E6);
+        }
+        .contact-link.tg {
+            background: linear-gradient(135deg, #0088CC, #0099DD);
         }
         .contact-desc {
             color: #666;
@@ -511,8 +517,7 @@
         .page.active { display: block; }
         .hidden { display: none !important; }
     </style>
-</head>
-<body>
+</head><body>
 
 <!-- 充值首页 -->
 <div id="page-recharge" class="page active">
@@ -522,8 +527,7 @@
         <div class="hot-tag">🔥 热门充值服务</div>
     </div>
 
-   
-<!-- 选择服务类型 -->
+    <!-- 选择服务类型 -->
     <div class="section-title">选择服务类型</div>
     <div class="service-grid">
         <div class="service-card active" data-service="phone" onclick="selectService('phone')">
@@ -709,7 +713,7 @@
             2. 请精确支付显示的金额，不要多转或少转<br>
             3. 付款后通常 30-90 分钟内自动到账<br>
             4. 超时未到账请联系客服核实<br>
-            5. 客服：<a href="https://t.me/wxch03" target="_blank" style="color:inherit; text-decoration:underline;">@wxch03</a>
+            5. 客服QQ：<a target="_blank" href="tencent://message/?uin=1655988714&Site=&Menu=yes" style="color:inherit; text-decoration:underline;">1655988714</a> &nbsp;|&nbsp; TG：<a href="https://t.me/wxch03" target="_blank" style="color:inherit; text-decoration:underline;">@wxch03</a>
         </div>
     </div>
 
@@ -749,7 +753,7 @@
             2. 精确支付显示的金额，不要多转或少转<br>
             3. 转账后通常 30-90 分钟内自动到账<br>
             4. 超时未到账请联系客服核实<br>
-            5. 客服：<a href="https://t.me/wxch03" target="_blank" style="color:inherit; text-decoration:underline;">@wxch03</a>
+            5. 客服QQ：<a target="_blank" href="tencent://message/?uin=1655988714&Site=&Menu=yes" style="color:inherit; text-decoration:underline;">1655988714</a> &nbsp;|&nbsp; TG：<a href="https://t.me/wxch03" target="_blank" style="color:inherit; text-decoration:underline;">@wxch03</a>
         </div>
     </div>
 
@@ -765,9 +769,10 @@
             <div class="contact-icon">💬</div>
             <h2 class="contact-title">万兴未央客服</h2>
             <p>如有任何问题，请通过以下方式联系我们</p>
-            <a href="https://t.me/wxch03" target="_blank" class="contact-link">🔗 点击联系 TG</a>
+            <a target="_blank" href="tencent://message/?uin=1655988714&Site=&Menu=yes" class="contact-link qq">🐧 QQ客服：1655988714</a>
+            <a href="https://t.me/wxch03" target="_blank" class="contact-link tg">🔗 TG客服：@wxch03</a>
             <p class="contact-desc">
-                Telegram ID: @wxch03<br>
+                QQ：1655988714 &nbsp;|&nbsp; Telegram ID: @wxch03<br>
                 服务时间：24小时在线<br>
                 通常 5-30 分钟内回复
             </p>
@@ -779,7 +784,7 @@
                 • 转账后请保留交易哈希截图<br>
                 • 超时未到账请联系客服提供订单号<br>
                 • 客服不会主动索要密码和验证码<br>
-                • 认准官方TG：@wxch03
+                • 认准官方客服：QQ 1655988714 &nbsp;|&nbsp; TG @wxch03
             </div>
         </div>
     </div>
@@ -904,7 +909,7 @@ function selectService(service) {
 
     document.getElementById('phone-operator-section').classList.toggle('hidden', service !== 'phone');
     document.getElementById('phone-operator-grid').classList.toggle('hidden', service !== 'phone');
-    document.getElementById('oil-brand-section').classList.toggle('hidden', service !== 'oil');
+    document.getElementById('oil-brand-section').classList.toggle('hidden', service !=='oil');
     document.getElementById('oil-brand-grid').classList.toggle('hidden', service !== 'oil');
     document.getElementById('platform-section').classList.toggle('hidden', service !== 'douyin' && service !== 'kuaishou');
     document.getElementById('platform-grid').classList.toggle('hidden', service !== 'douyin' && service !== 'kuaishou');
@@ -1131,5 +1136,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
 renderAmountGrid();
 setInterval(updateDynamicDisplay, DYNAMIC_UPDATE_INTERVAL);
 </script>
+
 </body>
 </html>
