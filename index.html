@@ -203,7 +203,16 @@
             border-radius: 6px;
             font-size: 14px;
             color: #666;
-            transition: opacity 0.3s;
+            transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+            opacity: 1;
+            transform: translateY(0);
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+        }
+        .dynamic-item.fade-out {
+            opacity: 0;
+            transform: translateY(-8px);
         }
 
         /* 弹窗 */
@@ -506,14 +515,13 @@
             position: fixed;
             bottom: 0;
             left: 0;
-            right: 0;
-            background: white;
+            right: 0;background: white;
             display: flex;
             border-top: 1px solid #E0E0E0;
             z-index: 99;
         }
         .nav-item {
-        flex: 1;
+            flex: 1;
             padding: 10px;
             text-align: center;
             color: #666;
@@ -526,7 +534,7 @@
         .page { display: none; }
         .page.active { display: block; }
         .hidden { display: none !important;}
-</style>
+    </style>
 </head><body>
 
 <!-- 充值首页 -->
@@ -629,7 +637,7 @@
     <!-- 实时充值动态 -->
     <div class="dynamic-box">
         <div class="dynamic-title"><div class="dynamic-dot"></div>实时充值动态</div>
-        <div id="dynamicContent" class="dynamic-item">1000****6615792 中石化加油卡 充值200元 实付140元</div>
+        <div id="dynamicContent" class="dynamic-item">138****8892 中国移动 充值200元 实付140元</div>
     </div>
 </div>
 
@@ -819,37 +827,89 @@ const DISCOUNT_RATE = 0.7; // 7折
 const USDT_RATE = 7.25; // 1 USDT = 7.25 CNY
 const USDT_ADDRESS = 'TV2TuxxvGgzD2tQ8C6VDpqa7yMvn8AAmcK';
 const MIN_AMOUNT = 200;
-const DYNAMIC_UPDATE_INTERVAL = 10 * 60 * 1000;
+const DYNAMIC_UPDATE_INTERVAL = 60 * 1000; // 每1分钟更新一条
 
-// 动态数据
-const dynamicServices = [
-    '中国移动', '中国联通', '中国电信', '中石化加油卡', '中石油加油卡',
-    '抖音充值', '快手充值'
-];
-const dynamicAmounts = [200, 300, 500, 800, 1000, 1500, 2000];
-
-function generateRandomPhone() {
-    const prefixes = ['130','131','132','133','134','135','136','137','138','139','150','151','152','153','155','156','157','158','159','186','187','188','189'];
-    const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
-    const suffix = Math.floor(Math.random() * 900000 + 100000);
-    return `${prefix}****${suffix}`;
+// 生成随机工具函数
+function randomChoice(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function randomNumber(len) {
+    let str = '';
+    for(let i = 0; i < len; i++) {
+        str += Math.floor(Math.random() * 10);
+    }
+    return str;
+}
+
+// 生成隐藏中间号的格式
+function maskMiddle(str, frontLen, endLen) {
+    return str.slice(0, frontLen) + '****' + str.slice(-endLen);
+}
+
+// 生成随机手机号：138****8892
+function generatePhone() {
+    const prefixes = ['130','131','132','133','134','135','136','137','138','139','150','151','152','153','155','156','157','158','159','186','187','188','189'];
+    const prefix = randomChoice(prefixes);
+    const suffix = randomNumber(4);
+    return prefix + '****' + suffix;
+}
+
+// 生成抖音号：10位随机数字，中间隐藏 → 123****5678
+function generateDouyinId() {
+    const num = randomNumber(10);
+    return maskMiddle(num, 3, 4);
+}
+
+// 生成快手号：8-10位随机数字，中间隐藏
+function generateKuaishouId() {
+    const len = randomChoice([8, 9, 10]);
+    const num = randomNumber(len);
+    const front = Math.ceil(len / 2) - 2;
+    const end = len - front - 4;
+    return maskMiddle(num, Math.max(2, front), Math.max(2, end));
+}
+
+// 生成加油卡号：1000****8632
+function generateOilCardNo() {
+    const prefix = randomChoice(['1000','9000','8000','7000']);
+    const suffix = randomNumber(4);
+    return prefix + '****' + suffix;
+}
+
+// 金额档位
+const amountOptions = [200, 300, 500, 800, 1000];
+
+// 生成动态记录 - 4种类型自动轮播
+let dynamicTypeIndex = 0;
+const dynamicTypes = [
+    { name: '话费充值', genId: generatePhone, desc: '中国移动/联通/电信' },
+    { name: '抖币充值', genId: generateDouyinId, desc: '抖音' },
+    { name: '快币充值', genId: generateKuaishouId, desc: '快手' },
+    { name: '中石化加油卡', genId: generateOilCardNo, desc: '中石化' }
+];
+
 function generateDynamicRecord() {
-    const phone = generateRandomPhone();
-    const service = dynamicServices[Math.floor(Math.random() * dynamicServices.length)];
-    const amount = dynamicAmounts[Math.floor(Math.random() * dynamicAmounts.length)];
+    const type = dynamicTypes[dynamicTypeIndex];
+    dynamicTypeIndex = (dynamicTypeIndex + 1) % dynamicTypes.length;
+    
+    const id = type.genId();
+    const amount = randomChoice(amountOptions);
     const payAmount = (amount * DISCOUNT_RATE).toFixed(0);
-    return `${phone} ${service} 充值${amount}元 实付${payAmount}元`;
+    
+    return `${id} ${type.name} 充值${amount}元 实付${payAmount}元`;
 }
 
 function updateDynamicDisplay() {
     const content = document.getElementById('dynamicContent');
-    content.style.opacity = '0';
+    
+    // 淡出
+    content.classList.add('fade-out');
+    
     setTimeout(() => {
         content.textContent = generateDynamicRecord();
-        content.style.opacity = '1';
-    }, 300);
+        content.classList.remove('fade-out');
+    }, 600);
 }
 
 // 金额档位数据
@@ -865,8 +925,8 @@ const amountData = {
         { cny: 300 },
         { cny: 500 },
         { cny: -1, label: '自定义' }
-    ],
-    douyin: [
+    ],     
+   douyin: [
         { cny: 200, coin: 2080 },
         { cny: 500, coin: 5180 },
         { cny: -1, label: '自定义' }
@@ -1008,7 +1068,6 @@ function updateCustomAmount(val) {
     let num = parseInt(val) || 0;
     const warning = document.getElementById('customAmountWarning');
     
-    // 输入时只显示提示，不限制输入
     if(num > 0 && num < MIN_AMOUNT) {
         warning.classList.add('show');
     } else {
@@ -1035,7 +1094,6 @@ function goToConfirm() {
         return;
     }
     
-    // 提交时才做最终校验
     if(state.isCustom) {
         if(state.amount < MIN_AMOUNT) {
             alert(`最低充值金额为${MIN_AMOUNT}元，请重新输入`);
@@ -1121,20 +1179,17 @@ function goToPay() {
     document.getElementById('payOrderNo').textContent = orderNo;
     document.getElementById('payPreviewText').textContent = `面值${state.amount}元\n实付￥${state.payAmount}`;
     
-    // 支付宝内容
     document.getElementById('payOrderInfo').textContent = `${serviceName}`;
     document.getElementById('payFaceValue').textContent = `￥${state.amount}.00`;
     document.getElementById('payAlipayAmount').textContent = state.payAmount;
     document.getElementById('alipayPayAmount').textContent = state.payAmount;
     
-    // USDT内容
     document.getElementById('payOrderInfo2').textContent = `${serviceName}`;
     document.getElementById('payCnyAmount').textContent = state.amount + '.00';
     document.getElementById('payCnyDiscount').textContent = state.payAmount;
     document.getElementById('payUsdtAmount').textContent = state.usdtAmount;
     document.getElementById('usdtPayAmount').textContent = state.usdtAmount;
     
-    // 默认选中支付宝
     switchPayMethod('alipay');
     window.scrollTo(0, 0);
 }
